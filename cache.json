@@ -1,0 +1,1 @@
+{"rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR%20w%20KQkq%20-%200%201": {"cloud_eval": {"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "knodes": 335530066, "depth": 53, "pvs": [{"moves": "g1f3 g8f6 d2d4 d7d5 c2c4 e7e6 b1c3 f8b4 c4d5 e6d5", "cp": 32}]}}}
