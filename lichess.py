@@ -4,6 +4,7 @@ import urllib
 import json
 import time
 import random
+import queue
 
 cache_file = 'cache.json'
 cache = json.load(open(cache_file))
@@ -42,11 +43,11 @@ def cloud_eval(board):
         cache[fen]["cloud_eval"] = json.loads(request.text)
     result = cache[fen]["cloud_eval"]
     if "error" in result:
-        return None
+        return None, None
     return chess.Move.from_uci(result["pvs"][0]["moves"].split()[0]), result["pvs"][0]["cp"] / 100
 
 
-def pick_position():
+def random_position():
     board = chess.Board()
     color = bool(random.getrandbits(1))
     while True:
@@ -58,3 +59,24 @@ def pick_position():
         else:
             moves, weights = explorer(board)
             board.push(random.choices(moves, weights=weights, k=1)[0])
+
+
+def position_generator():
+    pq = queue.PriorityQueue()
+    start = chess.Board()
+    pq.put((-1, start))
+    for move, weight in zip(*explorer(start)):
+        board = chess.Board()
+        board.push(move)
+        pq.put((-weight, board))
+    while True:
+        weight, board = pq.get()
+        c = board.copy()
+        best_move, _ = cloud_eval(board)
+        if best_move:
+            yield board, best_move
+            c.push(best_move)
+            for move, probability in zip(*explorer(c)):
+                next_board = c.copy()
+                next_board.push(move)
+                pq.put((probability*weight, next_board))

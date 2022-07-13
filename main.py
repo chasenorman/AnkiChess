@@ -16,7 +16,9 @@ window = pygame.display.set_mode((board_size, board_size))
 clock = pygame.time.Clock()
 
 
-board, best_move = pick_position()
+board_generator = position_generator()
+
+board, best_move = next(board_generator)
 flipped = not board.turn
 
 incorrect = False
@@ -52,7 +54,8 @@ def try_move():
         move = board.find_move(from_square, to_square)
         if move == best_move:
             board.push(move)
-            render(fill={to_square: "#acce5980", from_square: "#acce5980"})
+            #render(fill={to_square: "#acce5980", from_square: "#acce5980"})
+            render(lastmove=last_move())
             correct_timer = 10
         else:
             board.push(move)
@@ -71,18 +74,18 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        if event.type == pygame.MOUSEBUTTONDOWN and not incorrect:
+        if event.type == pygame.MOUSEBUTTONDOWN:
             file, rank = map(lambda a: math.floor(a*8/board_size), pygame.mouse.get_pos())
             pos = rank*8 + (7 - file) if flipped else (7-rank)*8 + file
             if from_square is None:
                 from_square = pos
-            else:
+            elif not incorrect:
                 to_square = pos
                 try_move()
         if event.type == pygame.MOUSEBUTTONUP:
             file, rank = map(lambda a: math.floor(a * 8 / board_size), pygame.mouse.get_pos())
             pos = rank*8 + (7 - file) if flipped else (7 - rank) * 8 + file
-            if incorrect and pos != from_square:
+            if incorrect and from_square is not None:
                 board.pop()
                 render(lastmove=last_move())
                 incorrect = False
@@ -96,7 +99,7 @@ while run:
     if correct_timer:
         correct_timer -= 1
         if not correct_timer:
-            board, best_move = pick_position()
+            board, best_move = next(board_generator)
             to_square = None
             from_square = None
             flipped = not board.turn
