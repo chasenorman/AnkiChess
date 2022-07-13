@@ -1,5 +1,5 @@
 import chess
-import chess.svg
+import svg
 import pygame
 import io
 import math
@@ -28,7 +28,7 @@ def render(fill=None, lastmove=None):
     if fill is None:
         fill = dict()
     global pygame_surface
-    svg_string = chess.svg.board(
+    svg_string = svg.board(
         board=board,
         size=board_size,
         coordinates=False,

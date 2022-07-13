@@ -62,21 +62,24 @@ def random_position():
 
 
 def position_generator():
+    count = 0
     pq = queue.PriorityQueue()
     start = chess.Board()
-    pq.put((-1, start))
+    pq.put((-1, count, start))
     for move, weight in zip(*explorer(start)):
+        count += 1
         board = chess.Board()
         board.push(move)
-        pq.put((-weight, board))
+        pq.put((-weight, count, board))
     while True:
-        weight, board = pq.get()
+        weight, _, board = pq.get()
         c = board.copy()
         best_move, _ = cloud_eval(board)
         if best_move:
             yield board, best_move
             c.push(best_move)
             for move, probability in zip(*explorer(c)):
+                count += 1
                 next_board = c.copy()
                 next_board.push(move)
-                pq.put((probability*weight, next_board))
+                pq.put((probability*weight, count, next_board))
