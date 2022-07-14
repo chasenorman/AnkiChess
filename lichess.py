@@ -5,14 +5,19 @@ import json
 import time
 import random
 import queue
+from os.path import exists
+
+def get_json(filename):
+    if not exists(filename):
+        with open(filename, 'w') as fp:
+            json.dump(dict(), fp)
+            fp.flush()
+    with open(filename) as fp:
+        return json.load(fp)
 
 cache_file = 'cache.json'
-cache = json.load(open(cache_file))
-rate_limit_sleep = 1
-
-def flush_cache():
-    with open(cache_file, 'w') as fp:
-        json.dump(cache, fp)
+cache = get_json(cache_file)
+rate_limit_sleep = 0.3
 
 def explorer(board):
     fen = urllib.parse.quote(board.fen(), safe='')

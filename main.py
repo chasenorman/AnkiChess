@@ -4,6 +4,7 @@ import pygame
 import io
 import math
 from lichess import *
+from flashcards import *
 
 board_size = 500
 
@@ -15,14 +16,15 @@ pygame.init()
 window = pygame.display.set_mode((board_size, board_size))
 clock = pygame.time.Clock()
 
+board, best_move = next_problem()
 
-board_generator = position_generator()
 
-board, best_move = next(board_generator)
 flipped = not board.turn
 
 incorrect = False
 correct_timer = 0
+failed = False
+review = False
 
 def render(fill=None, lastmove=None):
     if fill is None:
@@ -49,17 +51,24 @@ pygame_surface = None
 render(lastmove=last_move())
 
 def try_move():
-    global from_square, to_square, correct_timer, incorrect
+    global from_square, to_square, correct_timer, incorrect, failed, review
     try:
         move = board.find_move(from_square, to_square)
-        if move == best_move:
+        if move == best_move or (board.is_kingside_castling(move) and board.is_kingside_castling(best_move)) or (board.is_queenside_castling(move) and board.is_queenside_castling(best_move)):
+            if not failed:
+                answer(board, 1)
             board.push(move)
-            #render(fill={to_square: "#acce5980", from_square: "#acce5980"})
             render(lastmove=last_move())
-            correct_timer = 10
+            if failed:
+                review = True
+            else:
+                correct_timer = 10
         else:
+            if not failed:
+                answer(board, 0)
             board.push(move)
             incorrect = True
+            failed = True
             render(fill={to_square: "#c9343080", from_square: "#c9343080"})
         from_square = None
         to_square = None
@@ -79,7 +88,7 @@ while run:
             pos = rank*8 + (7 - file) if flipped else (7-rank)*8 + file
             if from_square is None:
                 from_square = pos
-            elif not incorrect:
+            elif not incorrect and not correct_timer and not review:
                 to_square = pos
                 try_move()
         if event.type == pygame.MOUSEBUTTONUP:
@@ -89,9 +98,29 @@ while run:
                 board.pop()
                 render(lastmove=last_move())
                 incorrect = False
-            elif from_square and pos != from_square:
+                to_square = None
+                from_square = None
+            elif review and from_square is not None:
+                board, best_move = next_problem()
+                failed = False
+                review = False
+                to_square = None
+                from_square = None
+                flipped = not board.turn
+                render(lastmove=last_move())
+            elif not incorrect and not correct_timer and not review and from_square and pos != from_square:
                 to_square = pos
                 try_move()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN and not review and not correct_timer and not incorrect:
+                if not failed:
+                    answer(board, 0)
+                failed = True
+                review = True
+                board.push(best_move)
+                render(lastmove=last_move())
+                to_square = None
+                from_square = None
 
 
     window.fill((255, 255, 255))
@@ -99,7 +128,8 @@ while run:
     if correct_timer:
         correct_timer -= 1
         if not correct_timer:
-            board, best_move = next(board_generator)
+            board, best_move = next_problem()
+            failed = False
             to_square = None
             from_square = None
             flipped = not board.turn
@@ -110,6 +140,14 @@ while run:
 if __name__ == "__main__":
     pass
 
+def save():
+    with open(cache_file, 'w') as fp:
+        json.dump(cache, fp)
+        fp.flush()
+    with open(playerdata_file, 'w') as fp:
+        json.dump(playerdata, fp)
+        fp.flush()
+
 pygame.quit()
-flush_cache()
+save()
 exit()
