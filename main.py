@@ -1,4 +1,5 @@
 import chess
+import chess.pgn
 import svg
 import pygame
 import io
@@ -18,6 +19,7 @@ clock = pygame.time.Clock()
 
 board, best_move = next_problem()
 
+history = []
 
 flipped = not board.turn
 
@@ -88,13 +90,17 @@ while run:
             pos = rank*8 + (7 - file) if flipped else (7-rank)*8 + file
             if from_square is None:
                 from_square = pos
-            elif not incorrect and not correct_timer and not review:
+            elif not incorrect and not correct_timer and not review and not history:
                 to_square = pos
                 try_move()
         if event.type == pygame.MOUSEBUTTONUP:
             file, rank = map(lambda a: math.floor(a * 8 / board_size), pygame.mouse.get_pos())
             pos = rank*8 + (7 - file) if flipped else (7 - rank) * 8 + file
-            if incorrect and from_square is not None:
+            if history:
+                while history:
+                    board.push(history.pop())
+                render(lastmove=last_move())
+            elif incorrect and from_square is not None:
                 board.pop()
                 render(lastmove=last_move())
                 incorrect = False
@@ -112,7 +118,7 @@ while run:
                 to_square = pos
                 try_move()
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN and not review and not correct_timer and not incorrect:
+            if event.key == pygame.K_RETURN and not review and not correct_timer and not incorrect and not history:
                 if not failed:
                     answer(board, 0)
                 failed = True
@@ -121,6 +127,12 @@ while run:
                 render(lastmove=last_move())
                 to_square = None
                 from_square = None
+            if event.key == pygame.K_LEFT and len(board.move_stack) and not incorrect and not correct_timer:
+                history.append(board.pop())
+                render(lastmove=last_move())
+            if event.key == pygame.K_RIGHT and history and not incorrect and not correct_timer:
+                board.push(history.pop())
+                render(lastmove=last_move())
 
 
     window.fill((255, 255, 255))
