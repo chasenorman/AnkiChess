@@ -6,6 +6,7 @@ import io
 import math
 from lichess import *
 from flashcards import *
+import os.path
 
 board_size = 500
 
@@ -13,6 +14,7 @@ from_square = None
 to_square = None
 
 pygame.init()
+pygame.mixer.init()
 window = pygame.display.set_mode((board_size, board_size))
 clock = pygame.time.Clock()
 
@@ -26,6 +28,9 @@ incorrect = False
 correct_timer = 0
 failed = False
 review = False
+
+move_sfx = pygame.mixer.Sound(os.path.join('chess_move.wav'))
+stats = 1
 
 def render(fill=None, lastmove=None):
     if fill is None:
@@ -59,6 +64,7 @@ def try_move():
             if not failed:
                 answer(board, 1)
             board.push(move)
+            pygame.mixer.Sound.play(move_sfx)
             render(lastmove=last_move())
             if failed:
                 review = True
@@ -68,6 +74,7 @@ def try_move():
             if not failed:
                 answer(board, 0)
             board.push(move)
+            pygame.mixer.Sound.play(move_sfx)
             incorrect = True
             failed = True
             render(fill={to_square: "#c9343080", from_square: "#c9343080"})
@@ -98,6 +105,7 @@ while run:
             if history:
                 while history:
                     board.push(history.pop())
+                pygame.mixer.Sound.play(move_sfx)
                 render(lastmove=last_move())
             elif incorrect and from_square is not None:
                 board.pop()
@@ -123,6 +131,7 @@ while run:
                 failed = True
                 review = True
                 board.push(best_move)
+                pygame.mixer.Sound.play(move_sfx)
                 render(lastmove=last_move())
                 to_square = None
                 from_square = None
@@ -131,6 +140,7 @@ while run:
                 render(lastmove=last_move())
             if event.key == pygame.K_RIGHT and history and not incorrect and not correct_timer:
                 board.push(history.pop())
+                pygame.mixer.Sound.play(move_sfx)
                 render(lastmove=last_move())
             if event.key == pygame.K_ESCAPE:
                 run = False
