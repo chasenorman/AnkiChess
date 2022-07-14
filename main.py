@@ -9,7 +9,6 @@ from flashcards import *
 
 board_size = 500
 
-
 from_square = None
 to_square = None
 
@@ -133,7 +132,8 @@ while run:
             if event.key == pygame.K_RIGHT and history and not incorrect and not correct_timer:
                 board.push(history.pop())
                 render(lastmove=last_move())
-
+            if event.key == pygame.K_ESCAPE:
+                run = False
 
     window.fill((255, 255, 255))
     window.blit(pygame_surface, pygame_surface.get_rect(center=window.get_rect().center))

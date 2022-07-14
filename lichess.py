@@ -7,6 +7,9 @@ import random
 import queue
 from os.path import exists
 
+
+override = {}
+
 def get_json(filename):
     if not exists(filename):
         with open(filename, 'w') as fp:
@@ -52,12 +55,18 @@ def cloud_eval(board):
     return chess.Move.from_uci(result["pvs"][0]["moves"].split()[0]), result["pvs"][0]["cp"] / 100
 
 
+def player_move(board):
+    if board.fen() in override:
+        return chess.Move.from_uci(override[board.fen()])
+    return cloud_eval(board)[0]
+
+
 def random_position():
     board = chess.Board()
     color = bool(random.getrandbits(1))
     while True:
         if color == board.turn:
-            best_move = cloud_eval(board)[0]
+            best_move = player_move(board)
             if bool(random.getrandbits(1)):
                 return board, best_move
             board.push(best_move)
@@ -79,7 +88,7 @@ def position_generator():
     while True:
         weight, _, board = pq.get()
         c = board.copy()
-        best_move, _ = cloud_eval(board)
+        best_move = player_move(board)
         if best_move:
             yield board, best_move
             c.push(best_move)

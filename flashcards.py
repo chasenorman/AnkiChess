@@ -39,7 +39,7 @@ def next_problem():
     problem_pgn = min(playerdata, key=lambda f: ebisu.predictRecall(tuple(playerdata[f]["ebisu"]), time.time() - playerdata[f]["time"]), default=None)
     if problem_pgn and ebisu.predictRecall(tuple(playerdata[problem_pgn]["ebisu"]), time.time() - playerdata[problem_pgn]["time"], exact=True) < 0.5:
         board = from_pgn(problem_pgn)
-        return board, lichess.cloud_eval(board)[0]
+        return board, lichess.player_move(board)
     while True:
         board, best_move = next(generator)
         if pgn(board) not in playerdata:
