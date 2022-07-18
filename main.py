@@ -30,7 +30,6 @@ failed = False
 review = False
 
 move_sfx = pygame.mixer.Sound(os.path.join('chess_move.wav'))
-stats = 1
 
 def render(fill=None, lastmove=None):
     if fill is None:
@@ -84,7 +83,8 @@ def try_move():
         from_square = to_square
         to_square = None
 
-
+stats = 1
+total = len(playerdata)
 run = True
 while run:
     clock.tick(60)
@@ -115,6 +115,9 @@ while run:
                 from_square = None
             elif review and from_square is not None:
                 board, best_move = next_problem()
+                stats += 1
+                #print("first: " + str(stats))
+                total += 1
                 failed = False
                 review = False
                 to_square = None
@@ -151,12 +154,17 @@ while run:
         correct_timer -= 1
         if not correct_timer:
             board, best_move = next_problem()
+            stats += 1
+            total += 1
+            #print("second: " + str(stats)) first try right
             failed = False
             to_square = None
             from_square = None
             flipped = not board.turn
             render(lastmove=last_move())
     pygame.display.flip()
+    pygame.display.set_caption("Problem: " + str(stats) + "  |  Total Seen: " + str(total))
+
 
 
 if __name__ == "__main__":
@@ -169,6 +177,7 @@ def save():
     with open(playerdata_file, 'w') as fp:
         json.dump(playerdata, fp)
         fp.flush()
+
 
 pygame.quit()
 save()
